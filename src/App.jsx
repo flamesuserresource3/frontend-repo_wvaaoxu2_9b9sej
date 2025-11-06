@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import HeroCover from './components/HeroCover';
 import SmartSearch from './components/SmartSearch';
 import TrendingGrid from './components/TrendingGrid';
 import ControlsBar from './components/ControlsBar';
-import { Volume2, Pause, Play } from 'lucide-react';
+import AudioPlayer from './components/AudioPlayer';
 
 const seedSongs = [
   {
@@ -64,7 +64,6 @@ export default function App() {
     }
   });
   const [playSong, setPlaySong] = useState(null);
-  const audioRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem('favorites', JSON.stringify(favorites));
@@ -105,7 +104,7 @@ export default function App() {
     }
   };
 
-  const categorized = useMemo(() => {
+  const categorized = React.useMemo(() => {
     const map = {
       'feel-good': [],
       romantic: [],
@@ -121,19 +120,9 @@ export default function App() {
     return map;
   }, []);
 
-  // Play preview handler
+  // Start playing a selected song in the real-time player
   const startPreview = (song) => {
     setPlaySong(song);
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.src = song.preview || '';
-    if (audio.src) audio.play();
-  };
-
-  const stopPreview = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.pause();
   };
 
   return (
@@ -194,45 +183,11 @@ export default function App() {
         </div>
       </div>
 
-      {/* Floating mini player */}
-      <AnimatePresence>
-        {playSong && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-4 left-1/2 z-50 w-[92%] -translate-x-1/2 overflow-hidden rounded-2xl border border-white/10 bg-white/10 backdrop-blur md:w-[720px]"
-          >
-            <div className="flex items-center gap-3 p-3">
-              <img src={playSong.cover} alt="" className="h-10 w-10 rounded-md object-cover" />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold">{playSong.title}</div>
-                <div className="truncate text-xs text-white/70">{playSong.artist}</div>
-              </div>
-              <button
-                onClick={() => {
-                  const a = audioRef.current;
-                  if (!a) return;
-                  if (a.paused) a.play();
-                  else a.pause();
-                }}
-                className="rounded-xl bg-white/90 p-2 text-black hover:bg-white"
-              >
-                {audioRef.current && !audioRef.current.paused ? (
-                  <Pause className="h-5 w-5" />
-                ) : (
-                  <Play className="h-5 w-5" />
-                )}
-              </button>
-              <button onClick={() => setPlaySong(null)} className="rounded-xl p-2 text-white/80 hover:bg-white/10">Close</button>
-            </div>
-            <div className="flex items-center gap-2 bg-black/20 px-3 py-2 text-xs text-white/60">
-              <Volume2 className="h-4 w-4" /> Preview only for demo
-            </div>
-            <audio ref={audioRef} onEnded={() => setPlaySong(null)} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AudioPlayer
+        track={playSong}
+        onClose={() => setPlaySong(null)}
+        onEnded={() => setPlaySong(null)}
+      />
     </div>
   );
 }
